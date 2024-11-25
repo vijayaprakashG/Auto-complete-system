@@ -1,0 +1,134 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <ctype.h>
+
+#define ALPHABET_SIZE 26
+#define MAX_WORD_LENGTH 100
+
+// Definition of TrieNode structure
+struct TrieNode {
+    struct TrieNode *children[ALPHABET_SIZE];
+    bool isEndOfWord;
+};
+
+// Function to create a new Trie node
+struct TrieNode *createNode() {
+    struct TrieNode *node = (struct TrieNode *)malloc(sizeof(struct TrieNode));
+    if (node) {
+        node->isEndOfWord = false;
+        for (int i = 0; i < ALPHABET_SIZE; i++) {
+            node->children[i] = NULL;
+        }
+    }
+    return node;
+}
+
+// Function to insert a word into the Trie
+void insert(struct TrieNode *root, const char *word) {
+    struct TrieNode *current = root;
+    for (int i = 0; i < strlen(word); i++) {
+        int index = tolower(word[i]) - 'a';
+        if (index < 0 || index >= ALPHABET_SIZE) {
+            continue; // Skip non-alphabetic characters
+        }
+        if (!current->children[index]) {
+            current->children[index] = createNode();
+        }
+        current = current->children[index];
+    }
+    current->isEndOfWord = true;
+}
+
+// Function to search for a word in the Trie
+bool search(struct TrieNode *root, const char *word) {
+    struct TrieNode *current = root;
+    for (int i = 0; i < strlen(word); i++) {
+        int index = tolower(word[i]) - 'a';
+        if (index < 0 || index >= ALPHABET_SIZE || !current->children[index]) {
+            return false;
+        }
+        current = current->children[index];
+    }
+    return (current != NULL && current->isEndOfWord);
+}
+
+// Helper function to print all words in the Trie with the given prefix
+void printWords(struct TrieNode *root, char prefix[]) {
+    if (root->isEndOfWord) {
+        printf("%s\n", prefix);
+    }
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        if (root->children[i]) {
+            char newPrefix[MAX_WORD_LENGTH];
+            strcpy(newPrefix, prefix);
+            char c[2];
+            c[0] = 'a' + i;
+            c[1] = '\0';
+            strcat(newPrefix, c);
+            printWords(root->children[i], newPrefix);
+        }
+    }
+}
+
+// Function to suggest words based on the given prefix
+void suggestWords(struct TrieNode *root, char *prefix) {
+    struct TrieNode *current = root;
+    int i;
+    for (i = 0; i < strlen(prefix); i++) {
+        int index = tolower(prefix[i]) - 'a';
+        if (index < 0 || index >= ALPHABET_SIZE || !current->children[index]) {
+            printf("No words found with the given prefix.\n");
+            return;
+        }
+        current = current->children[index];
+    }
+    printf("Auto-complete suggestions:\n");
+    printWords(current, prefix);
+}
+
+// Main function to demonstrate the Trie operations
+int main() {
+    struct TrieNode *root = createNode();
+
+    char *words[] = {
+        "apple","ant","anchor","arrow","alligator","airplane","apricot","acorn","artist", "axe",
+        "banana", "bear", "ball", "book", "butterfly", "blue", "balloon", "bee", "boat","basket",
+        "cat", "car", "cup", "cake", "cookie", "cloud", "cow", "camel", "crayon", "carrot",
+         "dog", "duck", "doll", "door", "dragon", "diamond", "dolphin", "drum", "desk", "dress",
+        "elephant", "egg", "eagle", "earth", "envelope", "elf", "easel", "engine", "eraser", "echo",
+        "frog", "fish", "flower", "fan", "feather", "fire", "fox", "fence", "fruit", "flag",
+        "goat", "girl", "guitar", "glass", "grape", "ghost", "gold", "glove", "game", "garden",
+        "hat", "hand", "heart", "house", "horse", "hammer", "hamburger", "honey", "hoop",
+        "ice", "igloo", "island", "ink", "insect", "iron", "idea", "ivy", "ice cream", "internet",
+        "jellyfish", "jacket","jar", "jam", "jigsaw", "jeans", "juice", "jump", "jungle", "journal",
+        "kite", "key", "king", "kitten", "koala", "kangaroo", "kayak", "karate", "kitchen", "knight",
+        "lion", "lemon", "leaf", "ladder", "lamp", "ladybug", "lock", "love", "library", "log",
+        "monkey", "moon", "map", "milk", "mouse", "mountain", "mushroom", "magnet","mask", "music",
+        "nest", "net", "nose", "nail", "nut", "necklace", "napkin", "night", "notebook", "ninja",
+        "owl", "orange", "octopus", "otter", "ostrich", "oven", "olive", "omelette", "onion", "ocean",
+        "pig", "pear", "pen", "pumpkin", "piano", "pizza", "parrot", "pyramid", "popcorn", "paint",
+        "queen", "quilt", "question", "quill", "quiet", "quick", "quack", "quiver", "quarter", "quote",
+        "rabbit", "rose", "rainbow", "rocket", "ring", "robot", "rug", "ruler", "radio", "rice",
+        "sun", "snake", "star", "sock", "sandwich", "spider", "spoon", "strawberry", "snowflake", "surf",
+        "tiger", "tree", "train", "turtle", "tomato", "table", "truck", "toothbrush", "treasure", "trumpet",
+        "umbrella", "unicorn", "uniform", "universe", "utensil", "underground", "unicycle", "university", "up", "upside",
+        "violin", "volcano", "van", "vase", "vest", "vine", "village", "vampire", "vacuum", "vegetable",
+        "wolf", "whale", "water", "wagon", "wand", "window", "wig", "watch", "wheel", "web",
+        "xylophone", "x-ray", "xenon", "xerus", "xebec", "xylan", "xanthan", "xyst", "xerarch", "xeric",
+        "yak", "yam", "yacht", "yawn", "yarn", "year", "yellow", "yodel", "yogurt", "yoke",
+        "zebra", "zoo", "zipper", "zucchini", "zigzag", "zero", "zest", "zombie", "zone", "zoom"
+    };
+
+    for (int i = 0; i < sizeof(words) / sizeof(words[0]); i++) {
+        insert(root, words[i]);
+    }
+
+    char prefix[MAX_WORD_LENGTH];
+    printf("Enter a prefix to auto-complete: ");
+    scanf("%s", prefix);
+    suggestWords(root, prefix);
+
+    return 0;
+}
